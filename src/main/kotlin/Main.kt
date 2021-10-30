@@ -1,12 +1,16 @@
-import kotlin.concurrent.thread
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicInteger
 
-fun main(args: Array<String>) {
-    thread {
-        Thread.sleep(1000)
-        println("World")
+fun main() {
+    val result = AtomicInteger()
+
+    for (i in 1..1_500_000) {
+        GlobalScope.launch {
+            result.getAndIncrement()
+        }
     }
 
-    println("Hello, ")
-
-    Thread.sleep(1500)
+    Thread.sleep(1000)
+    println(result.get())
 }
