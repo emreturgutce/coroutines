@@ -2,14 +2,22 @@ import kotlinx.coroutines.*
 
 fun main() = runBlocking {
     val job = GlobalScope.launch {
-        repeat(1000) {
-            if (!isActive) return@launch
-            print(".")
-            Thread.sleep(100)
+        try {
+            repeat(1000) {
+                yield()
+                print(".")
+                Thread.sleep(100)
+            }
+        } catch (ex: CancellationException) {
+            println()
+            println("Cancelled")
+        } finally {
+            println()
+            println("finally")
         }
     }
 
-    delay(2500)
+    delay(200)
 
     job.cancelAndJoin()
 
