@@ -1,20 +1,17 @@
 import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 
 fun main() = runBlocking {
-    var job = withTimeoutOrNull(100) {
-        repeat(1000) {
-            yield()
-            print(".")
-            Thread.sleep(100)
-        }
-    }
+    val jobs = arrayListOf<Job>()
 
-    if (job == null) {
-        println("timed out")
-    }
+    createJobs(jobs)
 
-    delay(200)
-
-    println("done")
+    jobs.forEach { it.join() }
 }
 
+private fun CoroutineScope.createJobs(jobs: ArrayList<Job>) {
+    jobs += launch { println("`default`: In thread ${Thread.currentThread().name}") }
+    jobs += launch(Dispatchers.Default) { println("`defaultDispatcher`: In thread ${Thread.currentThread().name}") }
+    jobs += launch(Dispatchers.Unconfined) { println("`Unconfined`: In thread ${Thread.currentThread().name}") }
+    jobs += launch(newSingleThreadContext("newSTC")) { println("`newSTC`: In thread ${Thread.currentThread().name}") }
+}
