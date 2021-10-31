@@ -1,16 +1,18 @@
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.*
 
-fun main() {
-    val result = AtomicInteger()
-
-    for (i in 1..1_500_000) {
-        GlobalScope.launch {
-            result.getAndIncrement()
+fun main() = runBlocking {
+    val job = GlobalScope.launch {
+        repeat(1000) {
+            if (!isActive) return@launch
+            print(".")
+            Thread.sleep(100)
         }
     }
 
-    Thread.sleep(1000)
-    println(result.get())
+    delay(2500)
+
+    job.cancelAndJoin()
+
+    println("done")
 }
+
