@@ -1,17 +1,28 @@
 import kotlinx.coroutines.*
-import kotlin.coroutines.CoroutineContext
+import kotlin.random.Random
+import kotlin.system.measureTimeMillis
 
-fun main() = runBlocking {
-    val jobs = arrayListOf<Job>()
+fun main(args: Array<String>) = runBlocking {
+    val job = launch {
+        val time = measureTimeMillis {
+            val r1 = async { doWorkOne() }
+            val r2 = async { doWorkTwo() }
+            println("result: ${r1.await() + r2.await()}")
+        }
+        println("Done in: $time")
+    }
 
-    createJobs(jobs)
-
-    jobs.forEach { it.join() }
+    job.join()
 }
 
-private fun CoroutineScope.createJobs(jobs: ArrayList<Job>) {
-    jobs += launch { println("`default`: In thread ${Thread.currentThread().name}") }
-    jobs += launch(Dispatchers.Default) { println("`defaultDispatcher`: In thread ${Thread.currentThread().name}") }
-    jobs += launch(Dispatchers.Unconfined) { println("`Unconfined`: In thread ${Thread.currentThread().name}") }
-    jobs += launch(newSingleThreadContext("newSTC")) { println("`newSTC`: In thread ${Thread.currentThread().name}") }
+suspend fun doWorkOne(): Int {
+    delay(100)
+    println("Working 1")
+    return Random(System.currentTimeMillis()).nextInt(42)
+}
+
+suspend fun doWorkTwo(): Int {
+    delay(200)
+    println("Working 2")
+    return Random(System.currentTimeMillis()).nextInt(42)
 }
