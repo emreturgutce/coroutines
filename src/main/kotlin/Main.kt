@@ -1,23 +1,21 @@
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 
 fun main(args: Array<String>) = runBlocking {
+    val channel = Channel<Int>()
+
     val job = launch {
-        val result = async(coroutineContext) {
-            doWork("work 1")
+        for (x in 1..5) {
+            println("send: $x")
+            channel.send(x)
         }
-        doWork("work 2")
+    }
+
+    println("receive 1: ${channel.receive()}")
+
+    repeat(4) {
+        println("receive 2: ${channel.receive()}")
     }
 
     job.join()
-}
-
-suspend fun doWork(msg: String): Int {
-    log("$msg - Working")
-    delay(500)
-    log("$msg - Work done")
-    return 42
-}
-
-fun log(msg: String) {
-    println("$msg in ${Thread.currentThread().name}")
 }
