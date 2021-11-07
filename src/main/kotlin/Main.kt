@@ -1,21 +1,27 @@
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.produce
 
-fun main(args: Array<String>) = runBlocking {
-    val channel = Channel<Int>()
+fun main() = runBlocking {
+    val producer = produceNumbers()
+    val square = squareNumbers(producer)
 
-    val job = launch {
-        for (x in 1..5) {
-            println("send: $x")
-            channel.send(x)
-        }
+    for (i in 1..5) {
+        println(square.receive())
     }
+}
 
-    println("receive 1: ${channel.receive()}")
 
-    repeat(4) {
-        println("receive 2: ${channel.receive()}")
+fun produceNumbers() = GlobalScope.produce {
+    var x = 1
+
+    while (true) {
+        send(x++)
     }
+}
 
-    job.join()
+fun squareNumbers(numbers: ReceiveChannel<Int>) = GlobalScope.produce {
+    for (x in numbers) {
+        send(x * x)
+    }
 }
