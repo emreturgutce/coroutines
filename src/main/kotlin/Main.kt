@@ -1,26 +1,30 @@
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.selects.select
 
 fun main() = runBlocking {
-    val message = producer()
-    val message2 = producer2()
+    val sideChannel = Channel<Int>()
 
-    repeat(15) { println(selector(message, message2)) }
-}
+    launch { sideChannel.consumeEach { println("side $it") } }
 
-fun producer() = GlobalScope.produce {
-    send("From Producer 1")
-}
+    val producer = produceNumbers(sideChannel)
 
-fun producer2() = GlobalScope.produce {
-    send("From Producer 2")
-}
-
-suspend fun selector(message: ReceiveChannel<String>, message2: ReceiveChannel<String>): String {
-    return select {
-        message.onReceiveCatching { it.getOrNull() ?: "Channel 1 is closed" }
-        message2.onReceiveCatching { it.getOrNull() ?: "Channel 2 is closed" }
+    producer.consumeEach {
+        println("$it")
+        delay(500)
     }
+}
+
+fun produceNumbers(sideChannel: SendChannel<Int>) = GlobalScope.produce<Int> {
+    for (num in 1..10) {
+        delay(100)
+        select<Unit> {
+            onSend(num) {}
+            sideChannel.onSend(num) {}
+        }
+    }
+    println("Done sending")
 }
