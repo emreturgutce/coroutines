@@ -1,28 +1,22 @@
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.channels.Channel
 
 fun main() = runBlocking {
-    val producer = produceNumbers()
-    repeat(5) {
-        consumer(it, producer)
+    val channel = Channel<String>()
+
+    launch(coroutineContext) { sendString(channel, "foo", 200L) }
+    launch(coroutineContext) { sendString(channel, "bar", 500L) }
+
+    repeat(6) {
+        println(channel.receive())
     }
-    println("Launched")
-    delay(150)
-    producer.cancel()
+
+    coroutineContext.cancelChildren()
 }
 
-fun produceNumbers() = GlobalScope.produce {
-    var x = 1
-
+suspend fun sendString(channel: Channel<String>, s: String, interval: Long) {
     while (true) {
-        send(x++)
-    }
-}
-
-fun consumer(id: Int, channel: ReceiveChannel<Int>) = GlobalScope.launch {
-    channel.consumeEach {
-        println("Processor #$id received $it in thread ${Thread.currentThread().name}")
+        delay(interval)
+        channel.send(s)
     }
 }
