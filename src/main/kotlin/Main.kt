@@ -1,16 +1,17 @@
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.produce
 
 fun main() = runBlocking {
     val producer = produceNumbers()
-    val square = squareNumbers(producer)
-
-    for (i in 1..5) {
-        println(square.receive())
+    repeat(5) {
+        consumer(it, producer)
     }
+    println("Launched")
+    delay(150)
+    producer.cancel()
 }
-
 
 fun produceNumbers() = GlobalScope.produce {
     var x = 1
@@ -20,8 +21,8 @@ fun produceNumbers() = GlobalScope.produce {
     }
 }
 
-fun squareNumbers(numbers: ReceiveChannel<Int>) = GlobalScope.produce {
-    for (x in numbers) {
-        send(x * x)
+fun consumer(id: Int, channel: ReceiveChannel<Int>) = GlobalScope.launch {
+    channel.consumeEach {
+        println("Processor #$id received $it in thread ${Thread.currentThread().name}")
     }
 }
