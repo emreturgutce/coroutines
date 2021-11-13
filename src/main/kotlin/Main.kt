@@ -1,30 +1,45 @@
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.selects.select
+import kotlin.system.measureTimeMillis
 
-fun main() = runBlocking {
-    val sideChannel = Channel<Int>()
+const val SEQUENTIAL_THRESHOLD = 20_000_000 / 7
 
-    launch { sideChannel.consumeEach { println("side $it") } }
+suspend fun compute(array: IntArray, low: Int, high: Int): Long = coroutineScope {
+    if (high - low <= SEQUENTIAL_THRESHOLD) {
+        (low until high).sumOf { array[it].toLong() }
+    } else {
+        val mid = low + (high - low) / 2
+        val left = async(Dispatchers.Default) { compute(array, low, mid) }
+        val right = async(Dispatchers.Default) { compute(array, mid, high) }
 
-    val producer = produceNumbers(sideChannel)
-
-    producer.consumeEach {
-        println("$it")
-        delay(500)
+        left.await() + right.await()
     }
 }
 
-fun produceNumbers(sideChannel: SendChannel<Int>) = GlobalScope.produce<Int> {
-    for (num in 1..10) {
-        delay(100)
-        select<Unit> {
-            onSend(num) {}
-            sideChannel.onSend(num) {}
-        }
+fun main() = runBlocking {
+
+    println("Start")
+
+    Thread.sleep(1000)
+
+    val list = mutableListOf<Int>()
+
+    var limit = 20_000_000
+
+    while (limit > 0) {
+        list.add(limit--)
     }
-    println("Done sending")
+
+    var result: Long
+
+    measureTimeMillis {
+        result = compute(list.toIntArray(), 0, list.toIntArray().size)
+    }
+
+    result = 0L
+
+    val time = measureTimeMillis {
+        result = compute(list.toIntArray(), 0, list.toIntArray().size)
+    }
+
+    println("$result in ${time}ms")
 }
