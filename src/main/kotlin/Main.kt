@@ -1,45 +1,29 @@
 import kotlinx.coroutines.*
-import kotlin.system.measureTimeMillis
+import java.lang.Thread.sleep
+import kotlin.concurrent.thread
 
-const val SEQUENTIAL_THRESHOLD = 20_000_000 / 7
+fun main() {
 
-suspend fun compute(array: IntArray, low: Int, high: Int): Long = coroutineScope {
-    if (high - low <= SEQUENTIAL_THRESHOLD) {
-        (low until high).sumOf { array[it].toLong() }
-    } else {
-        val mid = low + (high - low) / 2
-        val left = async(Dispatchers.Default) { compute(array, low, mid) }
-        val right = async(Dispatchers.Default) { compute(array, mid, high) }
+    GlobalScope.launch {
+        delay(1000)
 
-        left.await() + right.await()
+        print("World")
     }
+
+    print("Hello, ")
+
+    sleep(1500)
 }
 
-fun main() = runBlocking {
+fun old_main() = runBlocking {
 
-    println("Start")
+    thread {
+        sleep(1000)
 
-    Thread.sleep(1000)
-
-    val list = mutableListOf<Int>()
-
-    var limit = 20_000_000
-
-    while (limit > 0) {
-        list.add(limit--)
+        println("World")
     }
 
-    var result: Long
+    print("Hello, ")
 
-    measureTimeMillis {
-        result = compute(list.toIntArray(), 0, list.toIntArray().size)
-    }
-
-    result = 0L
-
-    val time = measureTimeMillis {
-        result = compute(list.toIntArray(), 0, list.toIntArray().size)
-    }
-
-    println("$result in ${time}ms")
+    sleep(1500)
 }
