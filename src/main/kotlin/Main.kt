@@ -1,21 +1,20 @@
 package com.emreturgutce
 
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 
 fun main(args: Array<String>) = runBlocking {
-    val job = launch {
+
+    val job = withTimeoutOrNull(100) {
         repeat(1000) {
-            delay(10)
+            yield()
+
             print(".")
+
+            Thread.sleep(1)
         }
     }
 
-    delay(250)
-
-    job.cancelAndJoin()
-
-    println("Done")
+    if (job == null) {
+        println("Timed out")
+    }
 }
