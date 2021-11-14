@@ -2,19 +2,28 @@ package com.emreturgutce
 
 import kotlinx.coroutines.*
 
-fun main(args: Array<String>) = runBlocking {
+fun main(args: Array<String>) = runBlocking<Unit> {
 
-    val job = withTimeoutOrNull(100) {
-        repeat(1000) {
-            yield()
+    launch {
+        runWithGlobalScope()
+        println("returned")
+    }
+}
 
-            print(".")
+suspend fun runWithGlobalScope() {
+    coroutineScope {
+        launch {
+            println("launch 1")
 
-            Thread.sleep(1)
+            delay(1000)
+        }
+
+        launch {
+            println("launch 2")
+
+            delay(2000)
         }
     }
 
-    if (job == null) {
-        println("Timed out")
-    }
+    println("finished")
 }
