@@ -1,48 +1,17 @@
-import kotlinx.coroutines.*
-import java.lang.Thread.sleep
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.concurrent.thread
+package com.emreturgutce
 
-const val NUM_OF_TASKS = 1_000
-const val NUM_OF_LOOPS = 500
-const val WAIT_MS = 10L
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
-fun main() = runBlocking {
+fun main(args: Array<String>) = runBlocking {
 
-    println("Starting")
-
-    val result = AtomicInteger()
-    val jobs = mutableListOf<Job>()
-
-    for (i in 1..NUM_OF_TASKS) {
-        jobs.add(launch(Dispatchers.IO) {
-            for (x in 1..NUM_OF_LOOPS) {
-                delay(WAIT_MS)
-            }
-            result.getAndIncrement()
-        })
+    val job = launch {
+        delay(1000)
+        println("World")
     }
 
-    jobs.forEach { it.join() }
-    println(result.get())
-}
+    print("Hello")
 
-fun old_main() {
-
-    println("Starting")
-
-    val result = AtomicInteger()
-    val threads = mutableListOf<Thread>()
-
-    for (i in 1..NUM_OF_TASKS) {
-        threads.add(thread {
-            for (x in 1..NUM_OF_LOOPS) {
-                sleep(WAIT_MS)
-            }
-            result.getAndIncrement()
-        })
-    }
-
-    threads.forEach { it.join() }
-    println(result.get())
+    job.join()
 }
