@@ -26,5 +26,6 @@ tasks.withType<KotlinCompile>() {
 }
 
 application {
-    mainClass.set("MainKt")
+    mainClass.set("com.emreturgutce.MainKt")
+    applicationDefaultJvmArgs = listOf("-Dkotlinx.coroutines.debug")
 }
