@@ -11,25 +11,25 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
     val job1 = scope.launch {
         launch { // 'default' context
-            println("\t'default': In thread ${Thread.currentThread().name}")
+            doWork("default")
         }
         launch(Dispatchers.Default) { // 'default' context
-            println("\t'defaultDispatcher': In thread ${Thread.currentThread().name}")
+            doWork("defaultDispatcher")
         }
         launch(Dispatchers.IO) { // 'IO' context
-            println("\t'IO Dispatcher': In thread ${Thread.currentThread().name}")
+            doWork("IO Dispatcher")
         }
         launch(Dispatchers.Unconfined) { // Will work with 'main' thread
-            println("\t'Unconfined': In thread ${Thread.currentThread().name}")
+            doWork("Unconfined")
         }
         launch(newSingleThreadContext("NewThread")) { // Will get new thread
-            println("\t'newSTC': In thread ${Thread.currentThread().name}")
+            doWork("newSTC")
         }
         launch(dispatcher) { // Will get dispatched to ForkJoinPool.commonPool (or equivalent)
-            println("\t'cachedThreadPool': In thread ${Thread.currentThread().name}")
+            doWork("cachedThreadPool")
         }
         launch(executor) { // Will get dispatched to ForkJoinPool.commonPool (or equivalent)
-            println("\t'fixedThreadPool': In thread ${Thread.currentThread().name}")
+            doWork("fixedThreadPool")
         }
     }
 
@@ -39,4 +39,10 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
     executor.close()
     dispatcher.close()
+}
+
+suspend fun doWork(dispatcherName: String) {
+    withContext(Dispatchers.IO) {
+        println("\t'$dispatcherName': In thread ${Thread.currentThread().name}")
+    }
 }
