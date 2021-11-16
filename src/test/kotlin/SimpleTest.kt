@@ -8,8 +8,6 @@ class SimpleTest {
 
     @Test
     fun firstTest() = runBlocking {
-        doWork()
-
         assertEquals(2, 1 + 1)
     }
 }

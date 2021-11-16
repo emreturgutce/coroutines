@@ -1,48 +1,32 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-import java.util.concurrent.Executors
+import kotlin.random.Random
+import kotlin.system.measureTimeMillis
 
-val scope = CoroutineScope(Job())
-val dispatcher = Executors.newCachedThreadPool().asCoroutineDispatcher()
-val executor = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
+fun main(args: Array<String>) = runBlocking {
+    val job = launch {
+        val time = measureTimeMillis {
+            val res1 = async { doWorkOne() }
+            val res2 = async { doWorkTwo() }
 
-fun main(args: Array<String>) = runBlocking<Unit> {
+            println("The result is ${res1.await() + res2.await()}")
+        }
 
-    val job1 = scope.launch {
-        launch { // 'default' context
-            doWork("default")
-        }
-        launch(Dispatchers.Default) { // 'default' context
-            doWork("defaultDispatcher")
-        }
-        launch(Dispatchers.IO) { // 'IO' context
-            doWork("IO Dispatcher")
-        }
-        launch(Dispatchers.Unconfined) { // Will work with 'main' thread
-            doWork("Unconfined")
-        }
-        launch(newSingleThreadContext("NewThread")) { // Will get new thread
-            doWork("newSTC")
-        }
-        launch(dispatcher) { // Will get dispatched to ForkJoinPool.commonPool (or equivalent)
-            doWork("cachedThreadPool")
-        }
-        launch(executor) { // Will get dispatched to ForkJoinPool.commonPool (or equivalent)
-            doWork("fixedThreadPool")
-        }
+        println("This took $time to run")
     }
 
-    job1.join()
-
-    println()
-
-    executor.close()
-    dispatcher.close()
+    job.join()
 }
 
-suspend fun doWork(dispatcherName: String) {
-    withContext(Dispatchers.IO) {
-        println("\t'$dispatcherName': In thread ${Thread.currentThread().name}")
-    }
+suspend fun doWorkOne(): Int {
+    delay(100)
+    println("Working 1")
+    return Random(System.currentTimeMillis()).nextInt(42)
+}
+
+suspend fun doWorkTwo(): Int {
+    delay(200)
+    println("Working 2")
+    return Random(System.currentTimeMillis()).nextInt(42)
 }
