@@ -1,32 +1,36 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-import kotlin.random.Random
-import kotlin.system.measureTimeMillis
 
-fun main(args: Array<String>) = runBlocking {
-    val job = launch {
-        val time = measureTimeMillis {
-            val res1 = async { doWorkOne() }
-            val res2 = async { doWorkTwo() }
+fun main(args: Array<String>) = runBlocking<Unit> {
+    val result: Deferred<Int> = doWorkAsync("Work1")
 
-            println("The result is ${res1.await() + res2.await()}")
-        }
+    val answer = result.await()
 
-        println("This took $time to run")
-    }
+    println("The answer is $answer")
 
-    job.join()
+    val res1: Int = doWork("Work2")
+    val res2: Deferred<Int> = async { doWork("Work3") }
+
+    res2.await()
 }
 
-suspend fun doWorkOne(): Int {
-    delay(100)
-    println("Working 1")
-    return Random(System.currentTimeMillis()).nextInt(42)
+fun doWorkAsync(msg: String): Deferred<Int> = GlobalScope.async {
+    log("$msg - Working")
+    delay(300)
+    log("$msg - Done")
+
+    return@async 42
 }
 
-suspend fun doWorkTwo(): Int {
-    delay(200)
-    println("Working 2")
-    return Random(System.currentTimeMillis()).nextInt(42)
+suspend fun doWork(msg: String): Int {
+    log("$msg - Working")
+    delay(300)
+    log("$msg - Done")
+
+    return 42
+}
+
+fun log(msg: String) {
+    println("$msg in ${Thread.currentThread().name}")
 }
