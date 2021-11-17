@@ -1,36 +1,30 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
+import kotlin.system.measureTimeMillis
 
-fun main(args: Array<String>) = runBlocking<Unit> {
-    val result: Deferred<Int> = doWorkAsync("Work1")
+class Person {
+    val children = GlobalScope.async(start = CoroutineStart.LAZY) { loadChildren() }
 
-    val answer = result.await()
-
-    println("The answer is $answer")
-
-    val res1: Int = doWork("Work2")
-    val res2: Deferred<Int> = async { doWork("Work3") }
-
-    res2.await()
+    companion object {
+        suspend fun loadChildren(): List<String> {
+            println("Loading children")
+            Thread.sleep(4000)
+            return listOf("Harry", "Sam", "Alex")
+        }
+    }
 }
 
-fun doWorkAsync(msg: String): Deferred<Int> = GlobalScope.async {
-    log("$msg - Working")
-    delay(300)
-    log("$msg - Done")
+fun main(args: Array<String>) = runBlocking {
+    println("Creating person")
 
-    return@async 42
-}
+    val kevin = Person()
+    kevin.children.start()
 
-suspend fun doWork(msg: String): Int {
-    log("$msg - Working")
-    delay(300)
-    log("$msg - Done")
+    Thread.sleep(2000)
 
-    return 42
-}
-
-fun log(msg: String) {
-    println("$msg in ${Thread.currentThread().name}")
+    val time = measureTimeMillis {
+        kevin.children.await().forEach(::println)
+    }
+    println("Person created in ${time}ms")
 }
