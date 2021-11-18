@@ -1,30 +1,32 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-import kotlin.system.measureTimeMillis
-
-class Person {
-    val children = GlobalScope.async(start = CoroutineStart.LAZY) { loadChildren() }
-
-    companion object {
-        suspend fun loadChildren(): List<String> {
-            println("Loading children")
-            Thread.sleep(4000)
-            return listOf("Harry", "Sam", "Alex")
-        }
-    }
-}
 
 fun main(args: Array<String>) = runBlocking {
-    println("Creating person")
+    val launchParent = Job()
+    val scope = CoroutineScope(Job())
 
-    val kevin = Person()
-    kevin.children.start()
-
-    Thread.sleep(2000)
-
-    val time = measureTimeMillis {
-        kevin.children.await().forEach(::println)
+    val job = scope.launch(launchParent) {
+        val j1 = coroutineContext[Job]
+        val j2 = launch { delay(500) }
+        println("job passed to the scope.launch as the new context: $launchParent")
+        displayChildren(0, launchParent)
+        println("job returned from scope.launch as the new job: $j1")
+        displayChildren(0, j1!!)
+        println("job returned from child launch (j2): $j2")
+        displayChildren(0, j2)
+        j2.join()
     }
-    println("Person created in ${time}ms")
+
+    job.join()
+}
+
+fun displayChildren(depth: Int = 0, job: Job) {
+    job.children.forEach {
+        for (i in 0..depth) {
+            print("\t")
+        }
+        println("child: $it")
+        displayChildren(depth + 1, it)
+    }
 }
