@@ -3,32 +3,31 @@ package com.emreturgutce
 import kotlinx.coroutines.*
 
 fun main(args: Array<String>) = runBlocking {
-    var child1: Job? = null
-
-    coroutineScope {
-        val job = GlobalScope.launch {
-            child1 = launch {
-                repeat(1000) {
-                    Thread.sleep(1000)
-                    print("1")
-                    yield()
-                }
-            }
-
+    val job = launch {
+        try {
             repeat(1000) {
-                delay(1000)
-                println("0")
+                delay(10)
+                print(".")
+            }
+        } catch (ex: CancellationException) {
+            println("Exception!!")
+            withContext(NonCancellable) {
+                reportError()
             }
         }
-
-        delay(4000)
-        child1?.cancelAndJoin()
-        println()
-        println("job is cancelled: ${job.isCancelled}")
-        println("job is active: ${job.isActive}")
-
-        job.join()
     }
 
-    println("coroutineScope finished")
+    delay(1000)
+
+    job.cancelAndJoin()
+}
+
+suspend fun reportError() {
+    println("Reporting error")
+    try {
+        delay(10)
+    } catch (t: Throwable) {
+        println(t)
+    }
+    println("Reported error")
 }
