@@ -2,26 +2,22 @@ package com.emreturgutce
 
 import kotlinx.coroutines.*
 
+val scope = CoroutineScope(Job())
+
 fun main(args: Array<String>) = runBlocking {
 
-    coroutineScope {
-        val job = launch {
-            launch { doWork(1) }
-            launch { doWork(2) }
+    val job = scope.launch {
+        val deferred = async {
+            delay(1000)
+            throw Exception()
+        }
 
-            launch {
-                delay(2000)
-                throw Exception("Some Exception")
-            }
+        try {
+            deferred.await()
+        } catch (t: Throwable) {
+            println("Caught $t")
         }
     }
 
-    println("Scope ended")
-}
-
-suspend fun doWork(i: Int) {
-    while (true) {
-        print(i)
-        delay(200)
-    }
+    job.join()
 }
