@@ -1,23 +1,22 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-
-val scope = CoroutineScope(Job())
+import kotlinx.coroutines.channels.Channel
 
 fun main(args: Array<String>) = runBlocking {
 
-    val job = scope.launch {
-        val deferred = async {
-            delay(1000)
-            throw Exception()
-        }
+    val channel = Channel<Int>()
 
-        try {
-            deferred.await()
-        } catch (t: Throwable) {
-            println("Caught $t")
-        }
+    val producer = launch {
+        delay(500)
+        channel.send(1)
     }
 
-    job.join()
+    val consumer = launch {
+        val data = channel.receive()
+        println("Received $data")
+    }
+
+    producer.join()
+    consumer.join()
 }
