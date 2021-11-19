@@ -3,31 +3,16 @@ package com.emreturgutce
 import kotlinx.coroutines.*
 
 fun main(args: Array<String>) = runBlocking {
-    val job = launch {
-        try {
-            repeat(1000) {
-                delay(10)
-                print(".")
-            }
-        } catch (ex: CancellationException) {
-            println("Exception!!")
-            withContext(NonCancellable) {
-                reportError()
-            }
-        }
+    val job = async {
+        delay(100)
+        42
     }
-
-    delay(1000)
-
     job.cancelAndJoin()
-}
 
-suspend fun reportError() {
-    println("Reporting error")
-    try {
-        delay(10)
-    } catch (t: Throwable) {
-        println(t)
+    if (!job.isCancelled) {
+        val result = job.await()
+    } else {
+        println("Already cancelled")
     }
-    println("Reported error")
+
 }
