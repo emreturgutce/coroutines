@@ -1,19 +1,27 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-
-fun generateInts() = flow<Int> {
-    repeat(10) {
-        delay(1000)
-        emit(it)
-    }
-}
+import kotlinx.coroutines.channels.Channel
 
 fun main(args: Array<String>) = runBlocking {
+    val channel = Channel<Int> { }
+    val jobs = mutableListOf<Job>()
 
-    generateInts().collect {
-        println("Collected: $it")
-    }
+    jobs.add(launch {
+        for (x in 1..5) {
+            val num = x * x
+            println("Sending $num")
+            channel.send(num)
+        }
+
+        channel.close()
+    })
+
+    jobs.add(launch {
+        for (value in channel) {
+            println("Received $value")
+        }
+    })
+
+    jobs.forEach { it.join() }
 }
