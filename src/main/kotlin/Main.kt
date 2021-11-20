@@ -16,10 +16,21 @@ fun generateInts(): Flow<Int> = flow {
 }
 
 fun main(args: Array<String>) = runBlocking<Unit> {
-    launch {
+    val job = launch {
         generateInts().collect {
             println("Collected (A): $it")
-            if (it == 5) this.cancel()
         }
     }
+
+    delay(5500)
+
+    launch {
+        generateInts().collect {
+            println("Collected (B): $it")
+        }
+    }
+
+    delay(2500)
+
+    job.cancel()
 }
