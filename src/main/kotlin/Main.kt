@@ -1,27 +1,21 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.produce
 
-fun main(args: Array<String>) = runBlocking {
-    val channel = Channel<Int> { }
-    val jobs = mutableListOf<Job>()
+suspend fun CoroutineScope.produceSquares(): ReceiveChannel<Int> = produce {
+    for (x in 1..5) {
+        val num = x * x
+        println("Sending $num")
+        send(num)
+    }
 
-    jobs.add(launch {
-        for (x in 1..5) {
-            val num = x * x
-            println("Sending $num")
-            channel.send(num)
-        }
+}
 
-        channel.close()
-    })
+fun main(args: Array<String>) = runBlocking<Unit> {
+    val channel = produceSquares()
 
-    jobs.add(launch {
-        for (value in channel) {
-            println("Received $value")
-        }
-    })
-
-    jobs.forEach { it.join() }
+    channel.consumeEach { println("Received $it") }
 }
