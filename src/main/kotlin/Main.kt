@@ -2,32 +2,31 @@ package com.emreturgutce
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.consumeEach
 
-suspend fun produceNumbers(coroutineScope: CoroutineScope, channel: Channel<Int>, delay: Long) =
-    coroutineScope.launch {
-        var x: Int = delay.toInt()
+fun main(args: Array<String>) = runBlocking {
+    val channel = Channel<Int>(4)
 
-        while (true) {
-            channel.send(x++)
-            delay(delay)
+    val producer = launch {
+        repeat(4) {
+            println("Sending $it")
+            channel.send(it)
         }
     }
 
-suspend fun consume(coroutineScope: CoroutineScope, producer: ReceiveChannel<Int>) = coroutineScope.launch {
-    producer.consumeEach { println("Received value: $it in thread ${Thread.currentThread().name}") }
-}
+    val consumer = launch {
+        println("Consumer starting")
+        delay(1000)
+        println("Consumer started")
 
-fun main(args: Array<String>) = runBlocking {
-    val channel = Channel<Int>()
+        for (value in channel) {
+            println(" -- received $value")
+        }
+    }
 
-    produceNumbers(this, channel, 500)
-    produceNumbers(this, channel, 200)
+    delay(500)
 
-    consume(this, channel)
+    println("Cancelling producer")
 
-    delay(5000)
-
-    channel.cancel()
+    producer.cancel()
+    consumer.join()
 }
