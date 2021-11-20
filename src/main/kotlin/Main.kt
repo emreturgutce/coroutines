@@ -17,6 +17,9 @@ fun generateInts(): Flow<Int> = flow {
 
 fun main(args: Array<String>) = runBlocking<Unit> {
     launch {
-        generateInts().collect(::println)
+        generateInts().collect {
+            println("Collected (A): $it")
+            if (it == 5) this.cancel()
+        }
     }
 }
