@@ -1,29 +1,22 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
 
-fun CoroutineScope.produceNumbers() = produce<Int>() {
-    var num = 0
+fun generateInts(): Flow<Int> = flow {
+    var value = 0
 
     while (true) {
-        delay(5000)
-        send(num++)
+        delay(1000)
+        println("emit $value")
+        emit(value++)
     }
 }
 
 fun main(args: Array<String>) = runBlocking<Unit> {
-
-    val producer = produceNumbers()
-
-    select {
-        producer.onReceive {
-            println("Consumed: $it")
-        }
-
-        onTimeout(1000) {
-            println("Timed out")
-        }
+    launch {
+        generateInts().collect(::println)
     }
 }
