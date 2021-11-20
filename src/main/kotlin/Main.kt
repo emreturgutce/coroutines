@@ -13,16 +13,10 @@ suspend fun produceNumbers(coroutineScope: CoroutineScope): ReceiveChannel<Int> 
             send(x++)
             delay(500)
         }
-
     }
 
-suspend fun createSquares(coroutineScope: CoroutineScope, numbersProducer: ReceiveChannel<Int>): ReceiveChannel<Int> =
-    coroutineScope.produce {
-        for (value in numbersProducer) send(value * value)
-    }
-
-suspend fun consume(coroutineScope: CoroutineScope, producer: ReceiveChannel<Int>) = coroutineScope.launch {
-    producer.consumeEach { println("Received $it") }
+suspend fun consume(id: Int, coroutineScope: CoroutineScope, producer: ReceiveChannel<Int>) = coroutineScope.launch {
+    producer.consumeEach { println("Received in consumer $id, value: $it in thread ${Thread.currentThread().name}") }
 }
 
 suspend fun <T, R> ReceiveChannel<T>.map(
@@ -45,7 +39,9 @@ fun main(args: Array<String>) = runBlocking {
         it * it * it
     }
 
-    consume(this, producer)
+    repeat(5) {
+        consume(it, this, producer)
+    }
 
     delay(3000)
 
