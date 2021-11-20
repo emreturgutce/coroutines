@@ -1,34 +1,29 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.selects.select
 
-fun CoroutineScope.produceNumbers(side: SendChannel<Int>) = produce<Int>() {
-    for (num in 1..10) {
-        delay(100)
-        select<Unit> {
-            onSend(num) {}
-            side.onSend(num) {}
-        }
-    }
+fun CoroutineScope.produceNumbers() = produce<Int>() {
+    var num = 0
 
-    println("Done sending")
+    while (true) {
+        delay(5000)
+        send(num++)
+    }
 }
 
-fun main(args: Array<String>) = runBlocking {
+fun main(args: Array<String>) = runBlocking<Unit> {
 
-    val side = Channel<Int>()
+    val producer = produceNumbers()
 
-    launch { side.consumeEach { println("Side Channel Consumed: $it") } }
+    select {
+        producer.onReceive {
+            println("Consumed: $it")
+        }
 
-    val producer = produceNumbers(side)
-
-    producer.consumeEach {
-        delay(400)
-        println(it)
+        onTimeout(1000) {
+            println("Timed out")
+        }
     }
 }
