@@ -1,35 +1,32 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
 
-fun main(args: Array<String>) = runBlocking<Unit> {
+fun generateInts() = flow {
+    var value = 0
 
-    val counter = Counter()
-
-    launch {
-        var value = 0
-
-        while (true) {
-            counter.produce(value++)
-            delay(200)
-        }
-    }
-
-    launch {
-        counter.counter.collect {
-            delay(100)
-            println("Collected $it")
-        }
+    while (true) {
+        delay(500)
+        println("emit $value")
+        emit(value++)
     }
 }
 
-class Counter {
-    private val _counter = MutableSharedFlow<Int>(5)
+fun main(args: Array<String>) = runBlocking<Unit> {
 
-    val counter = _counter.asSharedFlow()
+    val flow = generateInts().stateIn(this)
 
-    suspend fun produce(value: Int) {
-        _counter.emit(value)
+    launch {
+        flow.collect { println("Collector (A) $it") }
+    }
+
+    delay(2000)
+
+    launch {
+        println("Collector (B) before collect ${flow.value}")
+        flow.collect { println("Collector (B) $it") }
     }
 }
