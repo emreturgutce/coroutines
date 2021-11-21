@@ -7,7 +7,7 @@ fun generateInts() = flow {
     var value = 0
 
     while (true) {
-        delay(1000)
+        delay(3000)
         println("emit: $value")
         emit(value++)
     }
@@ -16,11 +16,15 @@ fun generateInts() = flow {
 fun main(args: Array<String>) = runBlocking<Unit> {
 
     launch {
-        generateInts()
-            .transform {
-                if (it % 2 == 0)
-                    emit(it * 2)
+        val result = generateInts()
+            .drop(1)
+            .take(5)
+            .fold(1) { a, b ->
+                println("a: $a")
+                println("b: $b")
+                a * b
             }
-            .collect { println("Collected: $it") }
+
+        println("Result is: $result")
     }
 }
