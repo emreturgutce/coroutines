@@ -1,36 +1,27 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
-fun generateInts(): Flow<Int> = flow {
+fun generateInts() = flow {
     var value = 0
 
     while (true) {
         delay(1000)
-        println("emit $value")
+        println("emit: $value")
         emit(value++)
     }
 }
 
 fun main(args: Array<String>) = runBlocking<Unit> {
-    val job = launch {
-        generateInts().collect {
-            println("Collected (A): $it")
-        }
-    }
-
-    delay(5500)
 
     launch {
-        generateInts().collect {
-            println("Collected (B): $it")
-        }
+        generateInts()
+            .filter { it % 2 == 0 }
+            .map { "$it * 2" }
+            .collect { println("Collected: $it") }
     }
-
-    delay(2500)
-
-    job.cancel()
 }
