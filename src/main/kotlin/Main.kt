@@ -3,28 +3,33 @@ package com.emreturgutce
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-fun generateInts() = flow {
-    var value = 0
+fun main(args: Array<String>) = runBlocking<Unit> {
 
-    while (true) {
-        delay(100)
-        println("emit: $value")
-        emit(value++)
+    val counter = Counter()
+
+    launch {
+        var value = 0
+
+        while (true) {
+            counter.produce(value++)
+            delay(200)
+        }
+    }
+
+    launch {
+        counter.counter.collect {
+            delay(100)
+            println("Collected $it")
+        }
     }
 }
 
-fun main(args: Array<String>) = runBlocking<Unit> {
+class Counter {
+    private val _counter = MutableSharedFlow<Int>(5)
 
-    val flow = generateInts().shareIn(this, SharingStarted.WhileSubscribed())
+    val counter = _counter.asSharedFlow()
 
-    launch {
-        flow.collect { println("Collector (A) $it") }
-    }
-
-    delay(2000)
-
-    launch {
-        flow
-            .collect { println("Collector (B) $it") }
+    suspend fun produce(value: Int) {
+        _counter.emit(value)
     }
 }
