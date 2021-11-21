@@ -17,16 +17,12 @@ fun generateInts() = flow {
 fun main(args: Array<String>) = runBlocking<Unit> {
 
     launch {
-        val time = measureTimeMillis {
-            generateInts()
-                .take(5)
-                .buffer(5)
-                .collect {
-                    delay(500)
-                    println("Collected $it")
-                }
-        }
-
-        println("Took ${time}ms")
+        generateInts()
+            .take(5)
+            .collectLatest {
+                println("Collecting $it")
+                delay(300)
+                println("Collected $it")
+            }
     }
 }
