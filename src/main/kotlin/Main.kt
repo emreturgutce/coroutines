@@ -1,10 +1,7 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 
 fun generateInts() = flow {
     var value = 0
@@ -20,8 +17,10 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
     launch {
         generateInts()
-            .filter { it % 2 == 0 }
-            .map { "$it * 2" }
+            .transform {
+                if (it % 2 == 0)
+                    emit(it * 2)
+            }
             .collect { println("Collected: $it") }
     }
 }
