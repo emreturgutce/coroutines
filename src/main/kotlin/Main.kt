@@ -2,7 +2,6 @@ package com.emreturgutce
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.util.*
 
 fun generateInts() = flow {
     var value = 0
@@ -14,21 +13,18 @@ fun generateInts() = flow {
     }
 }
 
-fun generateStrings(ndx: Int) = flow {
-    emit("$ndx as string-1")
-    delay(500)
-    emit("$ndx as string-2")
-}
+fun main(args: Array<String>) = runBlocking<Unit> {
 
-@OptIn(FlowPreview::class)
-fun main(args: Array<String>) = runBlocking {
+    val flow = generateInts().shareIn(this, SharingStarted.WhileSubscribed())
 
-    val job = launch {
-        generateInts()
-            .take(5)
-            .flatMapConcat { generateStrings(it) }
-            .collect { println("Collected $it") }
+    launch {
+        flow.collect { println("Collector (A) $it") }
     }
 
-    job.join()
+    delay(2000)
+
+    launch {
+        flow
+            .collect { println("Collector (B) $it") }
+    }
 }
