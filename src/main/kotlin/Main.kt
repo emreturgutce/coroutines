@@ -2,12 +2,13 @@ package com.emreturgutce
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlin.system.measureTimeMillis
 
 fun generateInts() = flow {
     var value = 0
 
     while (true) {
-        delay(3000)
+        delay(100)
         println("emit: $value")
         emit(value++)
     }
@@ -16,15 +17,16 @@ fun generateInts() = flow {
 fun main(args: Array<String>) = runBlocking<Unit> {
 
     launch {
-        val result = generateInts()
-            .drop(1)
-            .take(5)
-            .fold(1) { a, b ->
-                println("a: $a")
-                println("b: $b")
-                a * b
-            }
+        val time = measureTimeMillis {
+            generateInts()
+                .take(5)
+                .buffer(5)
+                .collect {
+                    delay(500)
+                    println("Collected $it")
+                }
+        }
 
-        println("Result is: $result")
+        println("Took ${time}ms")
     }
 }
