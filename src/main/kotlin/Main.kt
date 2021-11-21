@@ -1,32 +1,40 @@
 package com.emreturgutce
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
-
-fun generateInts() = flow {
-    var value = 0
-
-    while (true) {
-        delay(500)
-        println("emit $value")
-        emit(value++)
-    }
-}
+import kotlinx.coroutines.flow.update
 
 fun main(args: Array<String>) = runBlocking<Unit> {
 
-    val flow = generateInts().stateIn(this)
+    val counter = Counter()
 
     launch {
-        flow.collect { println("Collector (A) $it") }
+        while (true) {
+            counter.increment()
+            delay(100)
+        }
     }
 
-    delay(2000)
+    delay(500)
 
     launch {
-        println("Collector (B) before collect ${flow.value}")
-        flow.collect { println("Collector (B) $it") }
+        println("Collector (A) before ${counter.counter.value}")
+
+        counter.counter.collect {
+            delay(1000)
+            println("Collector (A) $it")
+        }
+    }
+}
+
+class Counter {
+    private val _counter = MutableStateFlow(0)
+
+    val counter = _counter.asStateFlow()
+
+    fun increment() {
+        _counter.update { it + 1 }
     }
 }
